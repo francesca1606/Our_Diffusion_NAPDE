@@ -1,0 +1,28 @@
+# Ignora cache Python
+__pycache__/
+
+# Ignora dati di preprocessing o feature
+fc/
+fc_processing/
+
+# Ignora cartelle generate durante esperimenti
+generated_test00/
+generated_test/
+generated_test_epoch6/
+
+# Ignora file locali non da condividere
+no_kaggle/
+Colabs_e_Vari/
+
+# Ignora dataset
+STEAD_data/
+
+# Ignora file di logging di wandb
+wandb/
+
+# Ignora file excel
+trained_models/*.gsheet
+trained_models/
+checkpoints/
+model/
+*.pth

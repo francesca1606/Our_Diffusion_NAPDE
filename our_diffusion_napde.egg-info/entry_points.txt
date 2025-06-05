@@ -1,0 +1,3 @@
+[console_scripts]
+run-diffusion = diffusion.generate_diffusion:main
+run-train = training.train:main

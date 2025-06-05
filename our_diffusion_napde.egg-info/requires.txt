@@ -1,0 +1,14 @@
+torch>=1.12
+torchmetrics
+einops
+obspy
+xgboost
+matplotlib
+pandas
+numpy
+scipy
+tqdm
+diffusers
+scikit-learn
+accelerate
+wandb

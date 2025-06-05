@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: our_diffusion_napde
+Version: 0.1
+Requires-Dist: torch>=1.12
+Requires-Dist: torchmetrics
+Requires-Dist: einops
+Requires-Dist: obspy
+Requires-Dist: xgboost
+Requires-Dist: matplotlib
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: scipy
+Requires-Dist: tqdm
+Requires-Dist: diffusers
+Requires-Dist: scikit-learn
+Requires-Dist: accelerate
+Requires-Dist: wandb
