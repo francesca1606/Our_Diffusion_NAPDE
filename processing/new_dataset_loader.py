@@ -19,7 +19,7 @@ class AugmentedDatasetSTEAD(torch.utils.data.Dataset):
         self.path = path
         self.predict_pga = predict_pga
         self.broadband_dataset         = torch.load(self.path + "chunk2_130k_acceleration_no_nan.pt")
-        self.fc                        = torch.load(self.path + "chunk2_130k_fc_no_nan.pt")
+        self.fc                        = torch.load(self.path + "chunk2_130k_fc_no_nan.pt")  
         #self.meta_data_depth           = torch.load(self.path + "meta_data_depth.pt")   # NON SO SE LI VOGLIAMO METTERE
         #self.meta_data_magnitude       = torch.load(self.path + "meta_data_magnitude.pt")
         self.data_percent = data_percent
@@ -46,7 +46,7 @@ class AugmentedDatasetSTEAD(torch.utils.data.Dataset):
 class AugmentedDataModule :
     def __init__(self,
                  batch_size  = 64,
-                 num_workers = 4,
+                 num_workers = 4,  
                  path = "STEAD_data/chunk2/",
                  predict_pga = False,
                  seed = 42,
@@ -99,7 +99,8 @@ class AugmentedDataModule :
         self.combined_loader = DataLoader(
             self.ds,
             batch_size = self.batch_size,
-            num_workers = self.num_workers
+            num_workers = self.num_workers,
+            drop_last=True
         )
 
         y,x,*other = next(iter(self.train_loader))
