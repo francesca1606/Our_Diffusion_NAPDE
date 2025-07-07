@@ -239,7 +239,7 @@ def wavelet_decompose_batch(x, wavelet='db4'):
     
     
 
-def butterworth_decompose_batch(x, fs = 100, cutoff=10, order=4):
+def butterworth_decompose_batch(x, fs = 100, cutoff=2*np.pi, order=4):
     """
     Decompose batched signals into low- and high-frequency components using Butterworth filter.
     
@@ -251,7 +251,6 @@ def butterworth_decompose_batch(x, fs = 100, cutoff=10, order=4):
     
     Returns:
         x_low: Low-frequency component (same shape as x)
-        x_high: High-frequency component (same shape as x)
     """
     x_np = x.cpu().numpy()
     batch, channels, length = x_np.shape
@@ -261,19 +260,15 @@ def butterworth_decompose_batch(x, fs = 100, cutoff=10, order=4):
     
     # Design low-pass and high-pass Butterworth filters
     b_low, a_low = butter(order, norm_cutoff, btype='low', analog=False)
-    b_high, a_high = butter(order, norm_cutoff, btype='high', analog=False)
     
     x_low = np.zeros_like(x_np)
-    x_high = np.zeros_like(x_np)
     
     for i in range(batch):
         for j in range(channels):
             signal = x_np[i, j]
             x_low[i, j] = filtfilt(b_low, a_low, signal)
-            x_high[i, j] = filtfilt(b_high, a_high, signal)
     
     x_low = torch.tensor(x_low, dtype=x.dtype).to(x.device)
-    x_high = torch.tensor(x_high, dtype=x.dtype).to(x.device)
     
-    return x_low, x_high
+    return x_low
 

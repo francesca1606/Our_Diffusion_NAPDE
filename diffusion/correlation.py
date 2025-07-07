@@ -49,8 +49,8 @@ g3_A= -0.3361
 s0_A= 0.7260
 s1_A= 0.0328
 
-#------------------------fc-------------------------------------------
-#NO
+#------------------------Brune Model-------------------------------------------
+
 def brune_model(f, M0, fc, tstar, C):
     return C * (M0 / (1 + (f / fc)**2)) * np.exp(-np.pi * f * tstar)
 
@@ -77,7 +77,7 @@ def fc_estimate(frequenze, dati_frequenza, magnitude):
 
 
 
-#------------------------HELPER FUNCTIONS------------------------------
+#------------------------Helper functions------------------------------
 
 def S(f,a1,a2,a3):
           return a1/(1+torch.exp(-a3*torch.log(f/a2)))
@@ -145,46 +145,13 @@ def correlation(fi,fj,fc):
         return (corr_b_E(fi,fj,fc)*variance_b_E(fi)*variance_b_E(fj) + corr_b_S(fi,fj)*variance_b_S(fi)*variance_b_S(fj) + corr_w_A(fi,fj)*variance_w_A(fi)*variance_w_A(fj))/(var_tot(fi)*var_tot(fj))
 
 
-def Loss_Covariant(v, fc, device=None):   # only one component in space
 
-        v = v.to(device)
-        delta_f_T = 0.01   # frequency spacing
-        T = v.shape[-1]
-        print(T)
-        fs = T * delta_f_T  # sampling frequency
-
-        dati_frequenza = torch.fft.fft(v, dim=-1).real
-        frequenze = torch.fft.fftfreq(T, d=1/fs).to(device)  # sposta sul device
-
-        positivi = frequenze > 0
-        frequenze = frequenze[positivi]
-
-        n = len(frequenze)
-        log_frequencies = torch.logspace(
-            torch.log10(frequenze[1]).item(),
-            torch.log10(frequenze[n // 2]).item(),
-            steps=n // 2,
-            base=10.0,
-            device=device  
-        )
-
-        indici_log_frequencies = torch.searchsorted(frequenze, log_frequencies)
-        dati_corrispondenti = dati_frequenza[:,:, indici_log_frequencies]
-
-        X = dati_corrispondenti.flatten(0, 1)
-        cov_matrix = torch.cov(X.T)
-        std_dev = torch.sqrt(torch.diag(cov_matrix))
-        correlation_matrix = cov_matrix / torch.outer(std_dev, std_dev)
-
-        correlation_empirical = correlation(log_frequencies.unsqueeze(1), log_frequencies.unsqueeze(0), fc)
-
-        return torch.mean((correlation_matrix - correlation_empirical) ** 2)
         
-def Loss_Covariant2(v, alphas, sigmas, noised_reals, fc, device=None):   # Andrea's Try
+def Loss_Covariant(v, alphas, sigmas, noised_reals, fc, device=None):   
 
         v = v.to(device)
         
-        # recontruct from v the original image x0
+        # reconstruct from v the predicted clean image x0
         x0 = alphas * noised_reals - sigmas * v 
         
         delta_f_T = 0.01   # frequency spacing
@@ -193,7 +160,7 @@ def Loss_Covariant2(v, alphas, sigmas, noised_reals, fc, device=None):   # Andre
         fs = T * delta_f_T  # sampling frequency
 
         dati_frequenza = torch.fft.fft(x0, dim=-1).real
-        frequenze = torch.fft.fftfreq(T, d=1/fs).to(device)  # sposta sul device
+        frequenze = torch.fft.fftfreq(T, d=1/fs).to(device)  
 
         positivi = frequenze > 0
         frequenze = frequenze[positivi]

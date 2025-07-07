@@ -11,7 +11,7 @@ from diffusion.diffusion_model import DiffusionAttnUnet1D
 from diffusion.utils import ema_update
 from einops import rearrange
 import matplotlib.pyplot as plt
-from diffusion.correlation import Loss_Covariant, Loss_Covariant2
+from diffusion.correlation import Loss_Covariant
 
 
 
@@ -79,8 +79,8 @@ def sample(model, noise, cond = None,steps = 1000, eta=0, training=False, device
 
 
 class DiffusionUncond(nn.Module):
-    def __init__(self,
-                 model = DiffusionAttnUnet1D(io_channels=3, n_attn_layers=4) , 
+    def __init__(self,                                  #per hugo 6, per noi 3
+                 model = DiffusionAttnUnet1D(io_channels=6, n_attn_layers=4) , 
                  seed = 42,
                  ema_decay = 0.995):
         super().__init__()
@@ -110,12 +110,14 @@ class DiffusionUncond(nn.Module):
         targets = noise * alphas - reals * sigmas
         v = self.diffusion(noised_reals, t, cond)
         
-        #AGGIUNTA DELLA LOSS sulle frequenze
+        # Adding the MSE and the interfrequency correlation loss to the cost function
         lossMSE = F.mse_loss(v, targets)
-        loss_f =  Loss_Covariant2(v, alphas, sigmas, noised_reals, fc, device)
+        loss_f =  Loss_Covariant(v, alphas, sigmas, noised_reals, fc, device)
         loss =  lossMSE + lambda_corr*loss_f
         print(f"MSE loss: {lossMSE}")
-        print(f"Frequency loss: {lambda_corr*loss_f}")
+        print(f"Frequency loss: {loss_f}")
+        print(f"Total Loss: {loss}")
+        print(f"lambda_corr: {lambda_corr}")
         
         return loss
     
@@ -190,25 +192,5 @@ if __name__ == "__main__":
     plt.savefig(save_path)
     plt.show() 
 
-    '''
-    device = torch.device("cpu")
-    rng = torch.quasirandom.SobolEngine(1, scramble=True, seed=42)
-    t = rng.draw(reals.shape[0])[:, 0].to(device)
-
-    t = get_crash_schedule(t)
-
-    # Calculate the noise schedule parameters for those timesteps
-    alphas, sigmas = get_alphas_sigmas(t)
-    # Combine the ground truth images and the noise
-    alphas = alphas[:, None, None]
-    sigmas = sigmas[:, None, None]
-    noise = torch.randn_like(reals)
-    noised_reals = reals * alphas + noise * sigmas
-    plt.plot(reals[0,0,:])
-    print(reals)
-    save_path = "/content/noisy_signal.png"
-    plt.savefig(save_path)
-    plt.show()
-    '''
     
 
