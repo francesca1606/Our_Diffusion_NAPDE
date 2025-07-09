@@ -125,7 +125,7 @@ class Trainer:
         self.clipping_gradient = clipping_gradient
         self.one_batch = one_batch
 
-        def train_one_epoch_unconditional(self, epoch):
+    def train_one_epoch_unconditional(self, epoch):
 
         self.model.train()
 

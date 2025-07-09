@@ -2,18 +2,20 @@ from contextlib import contextmanager
 import warnings
 import numpy as np
 import torch
-from torch import nn 
-import random 
+from torch import nn
+import random
 import math
 from torch import optim
 import pywt
 from scipy.signal import butter, filtfilt
 
+
 def append_dims(x, target_dims):
     """Appends dimensions to the end of a tensor until it has target_dims dimensions."""
     dims_to_append = target_dims - x.ndim
     if dims_to_append < 0:
-        raise ValueError(f'input has {x.ndim} dims but target_dims is {target_dims}, which is less')
+        raise ValueError(
+            f'input has {x.ndim} dims but target_dims is {target_dims}, which is less')
     return x[(...,) + (None,) * dims_to_append]
 
 
@@ -38,6 +40,7 @@ def eval_mode(model):
     """A context manager that places a model into evaluation mode and restores
     the previous mode on exit."""
     return train_mode(model, False)
+
 
 @torch.no_grad()
 def ema_update(model, averaged_model, decay):
@@ -146,10 +149,12 @@ class InverseLR(optim.lr_scheduler._LRScheduler):
         return [warmup * max(self.final_lr, base_lr * lr_mult)
                 for base_lr in self.base_lrs]
 
+
 def alpha_sigma_to_t(alpha, sigma):
     """Returns a timestep, given the scaling factors for the clean image and for
     the noise."""
     return torch.atan2(sigma, alpha) / math.pi * 2
+
 
 def get_crash_schedule(t):
     sigma = torch.sin(t * math.pi / 2) ** 2
@@ -157,18 +162,15 @@ def get_crash_schedule(t):
     return alpha_sigma_to_t(alpha, sigma)
 
 # Define the diffusion noise schedule
+
+
 def get_alphas_sigmas(t):
     return torch.cos(t * math.pi / 2), torch.sin(t * math.pi / 2)
 
-def append_dims(x, target_dims):
-    """Appends dimensions to the end of a tensor until it has target_dims dimensions."""
-    dims_to_append = target_dims - x.ndim
-    if dims_to_append < 0:
-        raise ValueError(f'input has {x.ndim} dims but target_dims is {target_dims}, which is less')
-    return x[(...,) + (None,) * dims_to_append]
 
 def expand_to_planes(input, shape):
     return input[..., None].repeat([1, 1, shape[2]])
+
 
 class PadCrop(nn.Module):
     def __init__(self, n_samples, randomize=True):
@@ -178,32 +180,36 @@ class PadCrop(nn.Module):
 
     def __call__(self, signal):
         n, s = signal.shape
-        start = 0 if (not self.randomize) else torch.randint(0, max(0, s - self.n_samples) + 1, []).item()
+        start = 0 if (not self.randomize) else torch.randint(
+            0, max(0, s - self.n_samples) + 1, []).item()
         end = start + self.n_samples
         output = signal.new_zeros([n, self.n_samples])
         output[:, :min(s, self.n_samples)] = signal[:, start:end]
         return output
 
+
 class RandomPhaseInvert(nn.Module):
     def __init__(self, p=0.5):
         super().__init__()
         self.p = p
+
     def __call__(self, signal):
         return -signal if (random.random() < self.p) else signal
 
-class Stereo(nn.Module):
-  def __call__(self, signal):
-    signal_shape = signal.shape
-    # Check if it's mono
-    if len(signal_shape) == 1: # s -> 2, s
-        signal = signal.unsqueeze(0).repeat(2, 1)
-    elif len(signal_shape) == 2:
-        if signal_shape[0] == 1: #1, s -> 2, s
-            signal = signal.repeat(2, 1)
-        elif signal_shape[0] > 2: #?, s -> 2,s
-            signal = signal[:2, :]    
 
-    return signal
+class Stereo(nn.Module):
+    def __call__(self, signal):
+        signal_shape = signal.shape
+        # Check if it's mono
+        if len(signal_shape) == 1:  # s -> 2, s
+            signal = signal.unsqueeze(0).repeat(2, 1)
+        elif len(signal_shape) == 2:
+            if signal_shape[0] == 1:  # 1, s -> 2, s
+                signal = signal.repeat(2, 1)
+            elif signal_shape[0] > 2:  # ?, s -> 2,s
+                signal = signal[:2, :]
+
+        return signal
 
 
 # ----------------------------
@@ -236,39 +242,37 @@ def wavelet_decompose_batch(x, wavelet='db4'):
     cA = torch.stack(cA_list).to(x.device)  # (batch, channels, new_length)
     cD = torch.stack(cD_list).to(x.device)
     return cA, cD
-    
-    
 
-def butterworth_decompose_batch(x, fs = 100, cutoff=2*np.pi, order=4):
+
+def butterworth_decompose_batch(x, fs=100, cutoff=2*np.pi, order=4):
     """
     Decompose batched signals into low- and high-frequency components using Butterworth filter.
-    
+
     Args:
         x: Tensor of shape (batch, channels, length)
         fs: Sampling frequency (Hz)
         cutoff: Cutoff frequency (Hz)
         order: Filter order
-    
+
     Returns:
         x_low: Low-frequency component (same shape as x)
     """
     x_np = x.cpu().numpy()
     batch, channels, length = x_np.shape
-    
+
     nyq = 0.5 * fs
     norm_cutoff = cutoff / nyq
-    
+
     # Design low-pass and high-pass Butterworth filters
     b_low, a_low = butter(order, norm_cutoff, btype='low', analog=False)
-    
+
     x_low = np.zeros_like(x_np)
-    
+
     for i in range(batch):
         for j in range(channels):
             signal = x_np[i, j]
             x_low[i, j] = filtfilt(b_low, a_low, signal)
-    
-    x_low = torch.tensor(x_low, dtype=x.dtype).to(x.device)
-    
-    return x_low
 
+    x_low = torch.tensor(x_low, dtype=x.dtype).to(x.device)
+
+    return x_low

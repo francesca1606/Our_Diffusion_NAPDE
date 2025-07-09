@@ -140,6 +140,23 @@ class DiffusionUncond(nn.Module):
         self.ema_decay = ema_decay
 
     def training_step(self, y, fc, lambda_corr, cond=None, device=None):
+        """
+        Training step for the diffusion model.
+
+        This method performs a single training step, calculating the loss based
+        on the mean squared error between the predicted noise and the actual
+        noise, as well as an additional frequency correlation loss.
+
+        Args:
+            - y (torch.Tensor): The ground truth signal tensor, shape [batch_size, channels, length].
+            - fc (torch.Tensor): The corner frequency tensor, shape [batch_size, length].
+            - lambda_corr (float): Weighting factor for the frequency correlation loss.
+            - cond (torch.Tensor, optional): Optional conditioning tensor, shape [batch_size, channels, length].
+            - device (torch.device): The device to perform the computation on.
+
+        Returns:
+            The computed loss value.
+        """
         reals = y  # y,x,*others
 
         # Draw uniformly distributed continuous timesteps
