@@ -15,6 +15,7 @@ from diffusion.diffusion_model import DiffusionAttnUnet1DCond, DiffusionAttnUnet
 # from diffusion.duo_graph import amplitude_graph, frequency_loglog
 from diffusion.duo_graph import amplitude_graph_STEAD, frequency_loglog_STEAD
 from diffusion.utils import butterworth_decompose_batch
+from diffusion.metrics import ssim_skimage, snr
 import xgboost as xgb
 DEMO_STEPS = 1000
 BATCH_SIZE = 4
@@ -106,6 +107,8 @@ def generate_sample_STEAD():
         for idx_1, (y_1, generate_1) in enumerate(zip(y, generate)):
             amplitude_graph_STEAD(y_1, generate_1, path, idx + idx_1)
             frequency_loglog_STEAD(y_1, generate_1, path, idx + idx_1)
+            print(f"SNR: {snr(y_1, generate_1)}")
+            print(f"SSIM: {ssim_skimage(y_1, generate_1)}")
 
 
 def generate_sample_STEAD_cond():
@@ -142,6 +145,8 @@ def generate_sample_STEAD_cond():
         for idx_1, (y_1, generate_1) in enumerate(zip(y, generate)):
             amplitude_graph_STEAD(y_1, generate_1, path, idx + idx_1)
             frequency_loglog_STEAD(y_1, generate_1, path, idx + idx_1)
+            print(f"SNR: {snr(y_1, generate_1)}")
+            print(f"SSIM: {ssim_skimage(y_1, generate_1)}")
 
 
 if __name__ == "__main__":
