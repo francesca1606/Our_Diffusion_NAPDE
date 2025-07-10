@@ -105,8 +105,8 @@ def generate_sample_STEAD():
         generate = model.sample(x=None, num_steps=100,
                                 device=device, training=False)
         for idx_1, (y_1, generate_1) in enumerate(zip(y, generate)):
-            amplitude_graph_STEAD(y_1, generate_1, path, idx + idx_1)
-            frequency_loglog_STEAD(y_1, generate_1, path, idx + idx_1)
+            amplitude_graph_STEAD(y_1, generate_1, path, idx*4 + idx_1)
+            frequency_loglog_STEAD(y_1, generate_1, path, idx*4 + idx_1)
             print(f"SNR: {snr(y_1, generate_1)}")
             print(f"SSIM: {ssim_skimage(y_1, generate_1)}")
 
@@ -143,8 +143,10 @@ def generate_sample_STEAD_cond():
         generate = model.sample(x=cond_low, num_steps=100,
                                 device=device, training=False)
         for idx_1, (y_1, generate_1) in enumerate(zip(y, generate)):
-            amplitude_graph_STEAD(y_1, generate_1, path, idx + idx_1)
-            frequency_loglog_STEAD(y_1, generate_1, path, idx + idx_1)
+            amplitude_graph_STEAD(y_1, generate_1, path, idx*4 + idx_1)
+            frequency_loglog_STEAD(y_1, generate_1, path, idx*4 + idx_1)
+            print(f"SNR: {snr(y_1, generate_1)}")
+            print(f"SSIM: {ssim_skimage(y_1, generate_1)}")
 
 
 def generate_sample_pbs():
