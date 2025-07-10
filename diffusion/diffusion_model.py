@@ -7,7 +7,6 @@ from diffusion.utils import append_dims, expand_to_planes
 from diffusion.utils import wavelet_decompose_batch, butterworth_decompose_batch
 
 
-# MODELLO CHECKPOINT HUGO
 class DiffusionAttnUnet1D(nn.Module):
     def __init__(
         self,
@@ -89,7 +88,7 @@ class DiffusionAttnUnet1DCond(nn.Module):
         self,
         io_channels=3,  # if you plan on using conditional input, set this to 6
         latent_dim=0,
-        depth=4,
+        depth=4,        # max depth of 5 with [batch, channels, 6000] data
         n_attn_layers=6,
         c_mults=[128, 128, 256, 256] + [512] * 10
 

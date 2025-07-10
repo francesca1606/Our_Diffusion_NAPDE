@@ -148,11 +148,11 @@ class DiffusionUncond(nn.Module):
         noise, as well as an additional frequency correlation loss.
 
         Args:
-            - y (torch.Tensor): The ground truth signal tensor, shape [batch_size, channels, length].
-            - fc (torch.Tensor): The corner frequency tensor, shape [batch_size, length].
-            - lambda_corr (float): Weighting factor for the frequency correlation loss.
-            - cond (torch.Tensor, optional): Optional conditioning tensor, shape [batch_size, channels, length].
-            - device (torch.device): The device to perform the computation on.
+            y (torch.Tensor): The ground truth signal tensor, shape [batch_size, channels, length].
+            fc (torch.Tensor): The corner frequency tensor, shape [batch_size, 1].
+            lambda_corr (float): Weighting factor for the frequency correlation loss.
+            cond (torch.Tensor, optional): Optional conditioning tensor, shape [batch_size, channels, length].
+            device (torch.device): The device to perform the computation on.
 
         Returns:
             The computed loss value.
