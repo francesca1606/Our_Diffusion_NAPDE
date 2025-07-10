@@ -12,3 +12,4 @@ diffusers
 scikit-learn
 accelerate
 wandb
+skimage
