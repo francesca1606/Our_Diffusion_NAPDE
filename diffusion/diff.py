@@ -187,7 +187,11 @@ class DiffusionUncond(nn.Module):
         return loss
 
     def sample(self, x, num_steps, device=torch.device("cpu"), training=True):
-        noise = torch.randn_like(x).to(device)
+        if x is not None:
+            noise = torch.randn_like(x).to(device)
+        else:
+          shape = (4, 3, 6000)  
+          noise = torch.randn(shape).to(device)
         out = sample(model=self.diffusion,
                      noise=noise,
                      cond=x,
