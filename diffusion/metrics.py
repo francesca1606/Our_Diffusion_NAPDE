@@ -6,6 +6,7 @@ import torch.nn as nn
 from obspy.signal.tf_misfit import eg, pg,plot_tf_gofs
 from numpy import linalg
 from torchmetrics.audio import SignalNoiseRatio
+from skimage.metrics import structural_similarity as ssim
 
 
 def snr(pred, target,eps=0):
@@ -18,6 +19,36 @@ def snr(pred, target,eps=0):
             /torch.norm(pred -target, dim =-1).clamp(min =1e-8))).mean()
     """
     return snr_value.mean()
+
+def ssim_skimage(pred, target):
+    pred_np = pred.detach().cpu().numpy()
+    target_np = target.detach().cpu().numpy()
+
+    if pred_np.ndim == 2:
+        pred_np = pred_np[None, ...]
+        target_np = target_np[None, ...]
+
+    B, C, L = pred_np.shape
+    ssim_vals = []
+
+    for i in range(B):
+        for c in range(C):
+            x = pred_np[i, c]
+            y = target_np[i, c]
+            data_range = y.max() - y.min()
+            signal_len = len(x)
+            win_size = min(31, signal_len if signal_len % 2 == 1 else signal_len - 1)
+
+            val = ssim(
+                x,
+                y,
+                data_range=data_range,
+                win_size=win_size,
+                channel_axis=None
+            )
+            ssim_vals.append(val)
+
+    return float(np.mean(ssim_vals))
 
 def MSE(pred, target):
     loss = nn.MSELoss()
