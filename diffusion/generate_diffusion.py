@@ -75,40 +75,56 @@ def generate_sample_STEAD():
         predict_pga=False,
         data_percent=0.1
     )
-    '''
-    dataset.setup()
-    dataloader = dataset.test_loader
-    print("Dataset loaded")
-    print("Starting generation")
-    for idx,batch in enumerate(dataloader):
-        y,*other = batch
-        y = y.to(device)
-        print(f"y shape BEFORE patch: {y.shape}")
-        y, *other= patch(y)
-        print(f"y shape AFTER patch: {y.shape}")
-        generate = model.sample(y,num_steps = 10,device= device, training=False)
-        # Run though the batch
-        
-        for idx,(y_1,generate_1,) in enumerate(zip(y,generate)):
-            amplitude_graph_STEAD(y_1, generate_1,path, idx)
-            frequency_loglog_STEAD(y_1, generate_1,path, idx)
-    '''
 
     dataset.setup()
     dataloader = dataset.test_loader
     print("Dataset loaded")
     print("Starting generation")
-    for idx, batch in enumerate(dataloader):
-        y, *other = batch
-        y = y.to(device)
-        print(y.shape)
-        generate = model.sample(x=None, num_steps=100,
-                                device=device, training=False)
-        for idx_1, (y_1, generate_1) in enumerate(zip(y, generate)):
-            amplitude_graph_STEAD(y_1, generate_1, path, idx*4 + idx_1)
-            frequency_loglog_STEAD(y_1, generate_1, path, idx*4 + idx_1)
-            print(f"SNR: {snr(y_1, generate_1)}")
-            print(f"SSIM: {ssim_skimage(y_1, generate_1)}")
+
+    # Initialize metrics file and storage for summary
+    metrics_file = os.path.join(path, "metrics.txt")
+    snr_values = []
+    ssim_values = []
+
+    with open(metrics_file, 'w') as f:
+        # Write header
+        f.write("Sample\tSNR\tSSIM\n")
+        f.write("-" * 30 + "\n")
+
+        for idx, batch in enumerate(dataloader):
+            y, *other = batch
+            y = y.to(device)
+            print(y.shape)
+            generate = model.sample(x=None, num_steps=100,
+                                    device=device, training=False)
+            for idx_1, (y_1, generate_1) in enumerate(zip(y, generate)):
+                sample_num = idx*BATCH_SIZE + idx_1
+                amplitude_graph_STEAD(y_1, generate_1, path, sample_num)
+                frequency_loglog_STEAD(y_1, generate_1, path, sample_num)
+
+                # Calculate metrics
+                snr_val = snr(y_1, generate_1)
+                ssim_val = ssim_skimage(y_1, generate_1)
+
+                # Write metrics immediately to file
+                f.write(f"{sample_num}\t{snr_val:.4f}\t{ssim_val:.4f}\n")
+                f.flush()  # Ensure data is written immediately
+
+                # Store values for summary statistics
+                snr_values.append(snr_val)
+                ssim_values.append(ssim_val)
+
+        # Write summary statistics at the end
+        f.write("\n" + "=" * 30 + "\n")
+        f.write("SUMMARY STATISTICS\n")
+        f.write("=" * 30 + "\n")
+
+        f.write(f"Mean SNR: {sum(snr_values)/len(snr_values):.4f}\n")
+        f.write(f"Mean SSIM: {sum(ssim_values)/len(ssim_values):.4f}\n")
+        f.write(f"Max SNR: {max(snr_values):.4f}\n")
+        f.write(f"Max SSIM: {max(ssim_values):.4f}\n")
+        f.write(f"Min SNR: {min(snr_values):.4f}\n")
+        f.write(f"Min SSIM: {min(ssim_values):.4f}\n")
 
 
 def generate_sample_STEAD_cond():
@@ -126,7 +142,7 @@ def generate_sample_STEAD_cond():
 
     dataset = AugmentedDataModule(
         batch_size=BATCH_SIZE,
-        path="path_to_pbs_data/",
+        path="STEAD_data/chunk2/",
         predict_pga=False,
         data_percent=0.1
     )
@@ -135,18 +151,52 @@ def generate_sample_STEAD_cond():
     dataloader = dataset.test_loader
     print("Dataset loaded")
     print("Starting generation")
-    for idx, batch in enumerate(dataloader):
-        y, *other = batch
-        y = y.to(device)
-        print(y.shape)
-        cond_low = butterworth_decompose_batch(y)
-        generate = model.sample(x=cond_low, num_steps=100,
-                                device=device, training=False)
-        for idx_1, (y_1, generate_1) in enumerate(zip(y, generate)):
-            amplitude_graph_STEAD(y_1, generate_1, path, idx*4 + idx_1)
-            frequency_loglog_STEAD(y_1, generate_1, path, idx*4 + idx_1)
-            print(f"SNR: {snr(y_1, generate_1)}")
-            print(f"SSIM: {ssim_skimage(y_1, generate_1)}")
+
+    # Initialize metrics file and storage for summary
+    metrics_file = os.path.join(path, "metrics.txt")
+    snr_values = []
+    ssim_values = []
+
+    with open(metrics_file, 'w') as f:
+        # Write header
+        f.write("Sample\tSNR\tSSIM\n")
+        f.write("-" * 30 + "\n")
+
+        for idx, batch in enumerate(dataloader):
+            y, *other = batch
+            y = y.to(device)
+            print(y.shape)
+            cond_low = butterworth_decompose_batch(y)
+            generate = model.sample(x=cond_low, num_steps=100,
+                                    device=device, training=False)
+            for idx_1, (y_1, generate_1) in enumerate(zip(y, generate)):
+                sample_num = idx*BATCH_SIZE + idx_1
+                amplitude_graph_STEAD(y_1, generate_1, path, sample_num)
+                frequency_loglog_STEAD(y_1, generate_1, path, sample_num)
+
+                # Calculate metrics
+                snr_val = snr(y_1, generate_1)
+                ssim_val = ssim_skimage(y_1, generate_1)
+
+                # Write metrics immediately to file
+                f.write(f"{sample_num}\t{snr_val:.4f}\t{ssim_val:.4f}\n")
+                f.flush()  # Ensure data is written immediately
+
+                # Store values for summary statistics
+                snr_values.append(snr_val)
+                ssim_values.append(ssim_val)
+
+        # Write summary statistics at the end
+        f.write("\n" + "=" * 30 + "\n")
+        f.write("SUMMARY STATISTICS\n")
+        f.write("=" * 30 + "\n")
+
+        f.write(f"Mean SNR: {sum(snr_values)/len(snr_values):.4f}\n")
+        f.write(f"Mean SSIM: {sum(ssim_values)/len(ssim_values):.4f}\n")
+        f.write(f"Max SNR: {max(snr_values):.4f}\n")
+        f.write(f"Max SSIM: {max(ssim_values):.4f}\n")
+        f.write(f"Min SNR: {min(snr_values):.4f}\n")
+        f.write(f"Min SSIM: {min(ssim_values):.4f}\n")
 
 
 def generate_sample_pbs():
@@ -164,7 +214,7 @@ def generate_sample_pbs():
 
     dataset = AugmentedDataModulePBS(
         batch_size=BATCH_SIZE,
-        path="STEAD_data/chunk2/",
+        path="path_to_pbs_data/",
         data_percent=0.1
     )
 
@@ -179,8 +229,8 @@ def generate_sample_pbs():
         generate = model.sample(x=x, num_steps=1000,
                                 device=device, training=False)
         for idx_1, (x_1, generate_1) in enumerate(zip(x, generate)):
-            amplitude_graph_pbs(x_1, path, idx + idx_1)
-            frequency_loglog_pbs(x_1, path, idx + idx_1)
+            amplitude_graph_pbs(x_1, path, idx*BATCH_SIZE + idx_1)
+            frequency_loglog_pbs(x_1, path, idx*BATCH_SIZE + idx_1)
 
 
 if __name__ == "__main__":

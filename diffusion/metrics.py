@@ -3,16 +3,28 @@ from tqdm import tqdm
 import math
 import torch
 import torch.nn as nn
-from obspy.signal.tf_misfit import eg, pg,plot_tf_gofs
+from obspy.signal.tf_misfit import eg, pg, plot_tf_gofs
 from numpy import linalg
 from torchmetrics.audio import SignalNoiseRatio
 from skimage.metrics import structural_similarity as ssim
 
 
-def snr(pred, target,eps=0):
+def snr(pred, target, eps=0):
+    """
+    Compute the Signal-to-Noise Ratio (SNR) between the predicted and target signals.
+
+    Args:
+        pred (torch.Tensor): Predicted signal tensor.
+        target (torch.Tensor): Target signal tensor.
+        eps (float, optional): Small value to avoid division by zero. Default is 0.
+
+    Returns:
+        double: Mean SNR among the batch.
+    """
     noise = target - pred
 
-    snr_value = (torch.sum(target**2, dim=-1) + eps) / (torch.sum(noise**2, dim=-1) + eps)
+    snr_value = (torch.sum(target**2, dim=-1) + eps) / \
+        (torch.sum(noise**2, dim=-1) + eps)
     snr_value = 10 * torch.log10(snr_value)
     """
     return (20 *torch.log10(torch.norm(target, dim=-1) \
@@ -20,7 +32,18 @@ def snr(pred, target,eps=0):
     """
     return snr_value.mean()
 
+
 def ssim_skimage(pred, target):
+    """Compute the Structural Similarity Index (SSIM) between the predicted and target images.
+
+    Args:
+        pred (torch.Tensor): Predicted image tensor.
+        target (torch.Tensor): Target image tensor.
+
+    Returns:
+        float: Mean SSIM value across all channels and batches.
+
+    """
     pred_np = pred.detach().cpu().numpy()
     target_np = target.detach().cpu().numpy()
 
@@ -37,7 +60,8 @@ def ssim_skimage(pred, target):
             y = target_np[i, c]
             data_range = y.max() - y.min()
             signal_len = len(x)
-            win_size = min(31, signal_len if signal_len % 2 == 1 else signal_len - 1)
+            win_size = min(31, signal_len if signal_len %
+                           2 == 1 else signal_len - 1)
 
             val = ssim(
                 x,
@@ -50,19 +74,21 @@ def ssim_skimage(pred, target):
 
     return float(np.mean(ssim_vals))
 
+
 def MSE(pred, target):
     loss = nn.MSELoss()
     loss_v = loss(pred, target)
     return loss_v
 
-def gof(pred,target):
-    eg_value = eg(pred,target)
-    pg_value = pg(pred,target)
+
+def gof(pred, target):
+    eg_value = eg(pred, target)
+    pg_value = pg(pred, target)
     return eg_value, pg_value
 
-def compute_embeddings(classifier_model,dataloader, count):
-    image_embeddings = []
 
+def compute_embeddings(classifier_model, dataloader, count):
+    image_embeddings = []
 
     for _ in tqdm(range(count)):
         images = next(iter(dataloader))
@@ -72,23 +98,22 @@ def compute_embeddings(classifier_model,dataloader, count):
     return np.array(image_embeddings)
 
 
-
-
 def calculate_fid(real_embeddings, generated_embeddings):
     # calculate mean and covariance statistics
-    mu1, sigma1 = real_embeddings.mean(axis=0), np.cov(real_embeddings, rowvar=False)
-    mu2, sigma2 = generated_embeddings.mean(axis=0), np.cov(generated_embeddings,  rowvar=False)
-     # calculate sum squared difference between means
+    mu1, sigma1 = real_embeddings.mean(
+        axis=0), np.cov(real_embeddings, rowvar=False)
+    mu2, sigma2 = generated_embeddings.mean(
+        axis=0), np.cov(generated_embeddings,  rowvar=False)
+    # calculate sum squared difference between means
     ssdiff = np.sum((mu1 - mu2)**2.0)
     # calculate sqrt of product between cov
     covmean = linalg.sqrtm(sigma1.dot(sigma2))
     # check and correct imaginary numbers from sqrt
     if np.iscomplexobj(covmean):
-       covmean = covmean.real
+        covmean = covmean.real
      # calculate score
     fid = ssdiff + np.trace(sigma1 + sigma2 - 2.0 * covmean)
     return fid
-
 
 
 def log_spectral_distance(x1, x2):
@@ -96,6 +121,6 @@ def log_spectral_distance(x1, x2):
     # Compute the LSD
     difference = torch.log(x1) - torch.log(x2)
     lsd_value = torch.sqrt(torch.mean(difference ** 2, dim=1))
-    
+
     # Return the average LSD across the three rows (assuming they represent 3 different spectra)
     return lsd_value.mean()
