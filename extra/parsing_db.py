@@ -2,29 +2,32 @@ import argparse
 import os
 from types import SimpleNamespace
 
-
-STEAD_config = SimpleNamespace(
+STEAD_config_db = SimpleNamespace(
     sample_rate=100,  # frequence
     sample_size=6000,  # number of sample
-    batch_size=16,  # 128, # batch_size
+    batch_size=2,  # 128, # batch_size
     model="PrimaProvaSTEAD",  # model to train
-    nb_epochs=4,  # 50, # number of epochs to train on
-    lr=8e-5,  # learning rate for the training
-    lambda_corr=2,  # hyperparameter weight for Loss_f
+    nb_epochs=1,  # 50, # number of epochs to train on
+    lr=1e-3,  # learning rate for the training
+    # number of warmup steps (not accounting for grad accumulation)
+    lr_warmup_steps=1500,
+    # type of schedule (https://huggingface.co/docs/transformers/main_classes/optimizer_schedules)
+    schedule="constant",
+    lambda_corr=10,  # hyperparameter weight for Loss_f
     seed=42,  # random seed
-    wandb=True,  # use wandb to log
+    wandb=False,  # use wandb to log
     save=True,  # save the model or not
     saving_path="model/saved_models/",  # saving path for the model
-    gpus=3,  # number of gpus to use
+    gpus=2,  # number of gpus to use
     # mixed_precision="no",  # use automatic mixed precision -> fasten training
-    run_name="GPU_run",  # run name for wandb
+    run_name="training_run",  # run name for wandb
     one_batch_training=False,  # train on one epoch for wandb
-    load_from_checkpoint="trained_models/8e_cond.pth",  # path to a model checkpoint
-    save_weHights_only=False,  # save weights or whole model
-    conditional=True,  # conditional or unconditional training
+    load_from_checkpoint=False,  # path to a model checkpoint
+    save_weights_only=False,  # save weights or whole model
+    conditional=False,  # conditional or unconditional training
     adam_beta1=0.95,
     adam_beta2=0.999,
-    gradient_accumulation_steps=1,
+    gradient_accumulation_steps=4,
     clip=False,
     prediction_type="sample",
     shuffle=True,
