@@ -4,6 +4,10 @@
 
 This project implements a diffusion model for generating synthetic seismic signals using the STEAD (STanford EArthquake Dataset). The model is designed to learn the underlying distribution of earthquake waveforms and generate realistic synthetic seismic data for various applications in seismology and machine learning.
 
+![](Images/Amplitude_graph_34_N-S.png)
+![](Images/Frequency_Spectrumloglog34_N-S.png)
+
+
 ### Key Features
 
 - **Diffusion-based Generation**: Uses state-of-the-art diffusion models to generate high-quality synthetic seismic waveforms
